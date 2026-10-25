@@ -21,6 +21,9 @@ jobs:
       - uses: actions/checkout@v4
       - uses: EmbarkStudios/cargo-deny-action@v2
         with:
+          # The action defaults to --all-features, which would pull in the opt-in
+          # GPL `vst3-gpl` feature. Check the default (shipped) build only.
+          arguments: --workspace
           command: check licenses sources
 
   build:
