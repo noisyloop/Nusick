@@ -1,6 +1,6 @@
-//! # Infinati Kick
+//! # Kick Me
 //!
-//! A Rust port of the Infinati Kick synth, the first Nusick plugin. Any MIDI
+//! A Rust port of Infinati's JUCE kick synth, the first Nusick plugin. Any MIDI
 //! note triggers the kick and a new hit restarts it. All sound comes from
 //! [`nusick_dsp::KickVoice`]; this crate only wires that voice to nih-plug
 //! (parameters, MIDI, the egui editor) and exports it as CLAP and standalone.
@@ -11,23 +11,23 @@ mod params;
 
 use nih_plug::prelude::*;
 use nusick_dsp::KickVoice;
-use params::InfinatiKickParams;
+use params::KickMeParams;
 use std::sync::{atomic::Ordering, Arc};
 
 /// Peak meter falloff: the time for the meter to drop 12 dB in silence.
 const METER_DECAY_MS: f32 = 300.0;
 
-pub struct InfinatiKick {
-    params: Arc<InfinatiKickParams>,
+pub struct KickMe {
+    params: Arc<KickMeParams>,
     voice: KickVoice,
     /// Output peak (linear gain), shared with the editor.
     peak: Arc<AtomicF32>,
     meter_decay: f32,
 }
 
-impl Default for InfinatiKick {
+impl Default for KickMe {
     fn default() -> Self {
-        let params = Arc::new(InfinatiKickParams::default());
+        let params = Arc::new(KickMeParams::default());
         let voice = KickVoice::new(44_100.0, &params.kick_params());
         Self {
             params,
@@ -38,8 +38,8 @@ impl Default for InfinatiKick {
     }
 }
 
-impl Plugin for InfinatiKick {
-    const NAME: &'static str = "Infinati Kick";
+impl Plugin for KickMe {
+    const NAME: &'static str = "Kick Me";
     const VENDOR: &'static str = "Infinati";
     const URL: &'static str = env!("CARGO_PKG_REPOSITORY");
     const EMAIL: &'static str = "";
@@ -125,8 +125,8 @@ impl Plugin for InfinatiKick {
     }
 }
 
-impl ClapPlugin for InfinatiKick {
-    const CLAP_ID: &'static str = "com.infinati.kick";
+impl ClapPlugin for KickMe {
+    const CLAP_ID: &'static str = "com.infinati.kick-me";
     const CLAP_DESCRIPTION: Option<&'static str> =
         Some("Sine kick synth with pitch sweep, click and drive");
     const CLAP_MANUAL_URL: Option<&'static str> = None;
@@ -140,15 +140,15 @@ impl ClapPlugin for InfinatiKick {
     ];
 }
 
-nih_export_clap!(InfinatiKick);
+nih_export_clap!(KickMe);
 
 #[cfg(feature = "vst3-gpl")]
 mod vst3 {
-    use super::InfinatiKick;
+    use super::KickMe;
     use nih_plug::prelude::*;
 
-    impl Vst3Plugin for InfinatiKick {
-        const VST3_CLASS_ID: [u8; 16] = *b"InfinatiKick0001";
+    impl Vst3Plugin for KickMe {
+        const VST3_CLASS_ID: [u8; 16] = *b"InfinatiKickMe01";
         const VST3_SUBCATEGORIES: &'static [Vst3SubCategory] = &[
             Vst3SubCategory::Instrument,
             Vst3SubCategory::Drum,
@@ -156,5 +156,5 @@ mod vst3 {
         ];
     }
 
-    nih_export_vst3!(InfinatiKick);
+    nih_export_vst3!(KickMe);
 }

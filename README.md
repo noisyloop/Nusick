@@ -1,7 +1,7 @@
 # Nusick
 
 Nusick is an MIT-licensed Rust framework for building audio plugins. The
-first plugin is **Infinati Kick**, a port of Infinati's JUCE kick synth.
+first plugin is **Kick Me**, a port of Infinati's JUCE kick synth.
 
 Today [nih-plug](https://github.com/robbert-vdh/nih-plug) is the host layer
 (CLAP, standalone, parameters, GUI hosting). Nusick owns the DSP, the UI
@@ -13,11 +13,11 @@ look, and the plugins, so the host layer can be swapped for Nusick's own later.
 |---|---|
 | `crates/nusick-dsp` | Pure-Rust DSP with no plugin dependencies: sine oscillator, envelopes, one-pole filter, tanh drive, noise burst, delay line, parameter smoother, and the kick voice. Includes the `render-kick` CLI. |
 | `crates/nusick-ui` | Dark egui theme plus `Knob` and `Meter` widgets. |
-| `plugins/infinati-kick` | The Infinati Kick plugin (CLAP plus standalone, opt-in VST3). |
+| `plugins/kick-me` | The Kick Me plugin (CLAP plus standalone, opt-in VST3). |
 | `xtask` | `cargo xtask bundle …`, which builds and lays out the plugin bundles. |
 | `scripts/package.sh` | Zips the bundles for release. |
 
-## Infinati Kick
+## Kick Me
 
 Any MIDI note triggers the kick, and a new note restarts it. A sine wave
 sweeps exponentially from **Start Pitch** to **End Pitch**.
@@ -47,16 +47,16 @@ You need the stable Rust toolchain from [rustup.rs](https://rustup.rs).
 ```sh
 xcode-select --install                     # once, for the C toolchain
 cargo test --workspace
-cargo xtask bundle infinati_kick --release
+cargo xtask bundle kick_me --release
 # Optional universal (Intel + Apple Silicon) build:
 rustup target add x86_64-apple-darwin aarch64-apple-darwin
-cargo xtask bundle-universal infinati_kick --release
+cargo xtask bundle-universal kick_me --release
 ```
 
-Install by copying `target/bundled/Infinati Kick.clap` to
+Install by copying `target/bundled/Kick Me.clap` to
 `~/Library/Audio/Plug-Ins/CLAP/`. The standalone app is
-`target/bundled/Infinati Kick.app`. Release builds are unsigned, so after
-downloading run `xattr -dr com.apple.quarantine "Infinati Kick.clap"`.
+`target/bundled/Kick Me.app`. Release builds are unsigned, so after
+downloading run `xattr -dr com.apple.quarantine "Kick Me.clap"`.
 
 ### Windows
 
@@ -65,11 +65,11 @@ with the "Desktop development with C++" workload, then:
 
 ```powershell
 cargo test --workspace
-cargo xtask bundle infinati_kick --release
+cargo xtask bundle kick_me --release
 ```
 
-Copy `target\bundled\Infinati Kick.clap` to `C:\Program Files\Common Files\CLAP\`.
-The standalone app is `target\bundled\Infinati Kick.exe`.
+Copy `target\bundled\Kick Me.clap` to `C:\Program Files\Common Files\CLAP\`.
+The standalone app is `target\bundled\Kick Me.exe`.
 
 ### Linux
 
@@ -77,7 +77,7 @@ The standalone app is `target\bundled\Infinati Kick.exe`.
 sudo apt install libasound2-dev libgl-dev libjack-jackd2-dev libx11-xcb-dev \
     libxcursor-dev libxcb-icccm4-dev libxcb-dri2-0-dev libxcb1-dev
 cargo test --workspace
-cargo xtask bundle infinati_kick --release   # copy the .clap to ~/.clap/
+cargo xtask bundle kick_me --release   # copy the .clap to ~/.clap/
 ```
 
 ### Quick listening without a DAW
@@ -88,7 +88,7 @@ cargo run -p nusick-dsp --bin render-kick -- kick.wav --start 220 --end 45 --dri
 
 Flags: `--start --end --pitch-decay --amp-decay --click --drive --level --length --rate`.
 
-The standalone app also works: `"target/bundled/Infinati Kick" --help`
+The standalone app also works: `"target/bundled/Kick Me" --help`
 lists the audio and MIDI backends.
 
 ## Licensing and VST3
@@ -102,7 +102,7 @@ Nusick's code is **MIT**. The default build (CLAP plus standalone) contains
 that doesn't relicense `vst3-sys`. So:
 
 ```sh
-cargo xtask bundle infinati_kick --release --features vst3-gpl
+cargo xtask bundle kick_me --release --features vst3-gpl
 ```
 
 builds a `.vst3` that you can use privately without restriction. **If you

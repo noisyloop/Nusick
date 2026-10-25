@@ -1,4 +1,4 @@
-//! The Infinati Kick voice: a sine with an exponential pitch sweep, an
+//! The Kick Me voice: a sine with an exponential pitch sweep, an
 //! exponential amp decay, a noise click, tanh drive and an output level.
 //!
 //! The kick lives here, not in the plugin crate, so it can be tested and

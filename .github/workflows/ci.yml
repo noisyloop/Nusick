@@ -63,19 +63,19 @@ jobs:
       # Keeps the opt-in GPL VST3 path compiling. Never packaged or released.
       - name: Check vst3-gpl feature compiles
         if: runner.os == 'Linux'
-        run: cargo check -p infinati_kick --features vst3-gpl
+        run: cargo check -p kick_me --features vst3-gpl
 
       - name: Bundle
         shell: bash
         run: |
           if [ "$RUNNER_OS" = "macOS" ]; then
-            cargo xtask bundle-universal infinati_kick --release
+            cargo xtask bundle-universal kick_me --release
           else
-            cargo xtask bundle infinati_kick --release
+            cargo xtask bundle kick_me --release
           fi
 
       - name: Render a test kick
-        run: cargo run --release -p nusick-dsp --bin render-kick -- target/bundled/infinati-kick-demo.wav
+        run: cargo run --release -p nusick-dsp --bin render-kick -- target/bundled/kick-me-demo.wav
 
       - name: Package
         shell: bash
@@ -83,8 +83,8 @@ jobs:
 
       - uses: actions/upload-artifact@v4
         with:
-          name: infinati-kick-${{ matrix.platform }}
-          path: dist/infinati-kick-${{ matrix.platform }}.zip
+          name: kick-me-${{ matrix.platform }}
+          path: dist/kick-me-${{ matrix.platform }}.zip
           if-no-files-found: error
 
   release:

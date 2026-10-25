@@ -1,12 +1,12 @@
-//! The Infinati Kick editor: seven knobs in a row and an output meter.
+//! The Kick Me editor: seven knobs in a row and an output meter.
 
-use crate::params::InfinatiKickParams;
+use crate::params::KickMeParams;
 use nih_plug::prelude::*;
 use nih_plug_egui::{create_egui_editor, egui};
 use nusick_ui::{theme, Knob, Meter};
 use std::sync::{atomic::Ordering, Arc};
 
-pub fn create(params: Arc<InfinatiKickParams>, peak: Arc<AtomicF32>) -> Option<Box<dyn Editor>> {
+pub fn create(params: Arc<KickMeParams>, peak: Arc<AtomicF32>) -> Option<Box<dyn Editor>> {
     create_egui_editor(
         params.editor_state.clone(),
         (),
@@ -14,12 +14,12 @@ pub fn create(params: Arc<InfinatiKickParams>, peak: Arc<AtomicF32>) -> Option<B
         move |ctx, setter, _| {
             egui::CentralPanel::default().show(ctx, |ui| {
                 ui.horizontal(|ui| {
-                    ui.heading(
-                        egui::RichText::new("INFINATI KICK")
-                            .color(theme::ACCENT)
-                            .strong(),
+                    ui.heading(egui::RichText::new("KICK ME").color(theme::ACCENT).strong());
+                    ui.label(
+                        egui::RichText::new("by Infinati · nusick")
+                            .color(theme::TEXT_DIM)
+                            .small(),
                     );
-                    ui.label(egui::RichText::new("nusick").color(theme::TEXT_DIM).small());
                 });
                 ui.add_space(12.0);
                 ui.horizontal(|ui| {

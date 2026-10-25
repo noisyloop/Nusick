@@ -1,6 +1,6 @@
 [package]
-name = "infinati_kick"
-description = "Infinati Kick: a sine kick synth with pitch sweep, click and drive"
+name = "kick_me"
+description = "Kick Me: a sine kick synth with pitch sweep, click and drive"
 version.workspace = true
 edition.workspace = true
 license.workspace = true
@@ -11,7 +11,7 @@ authors.workspace = true
 crate-type = ["cdylib", "lib"]
 
 [[bin]]
-name = "infinati_kick"
+name = "kick_me"
 path = "src/main.rs"
 
 [features]

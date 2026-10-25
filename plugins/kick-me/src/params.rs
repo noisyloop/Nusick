@@ -1,4 +1,4 @@
-//! Infinati Kick parameters. IDs are stable: changing one breaks saved sessions.
+//! Kick Me parameters. IDs are stable: changing one breaks saved sessions.
 
 use nih_plug::prelude::*;
 use nih_plug_egui::EguiState;
@@ -6,7 +6,7 @@ use nusick_dsp::KickParams;
 use std::sync::Arc;
 
 #[derive(Params)]
-pub struct InfinatiKickParams {
+pub struct KickMeParams {
     #[persist = "editor-state"]
     pub editor_state: Arc<EguiState>,
 
@@ -61,7 +61,7 @@ fn percent(name: &str, default: f32) -> FloatParam {
         .with_string_to_value(formatters::s2v_f32_percentage())
 }
 
-impl Default for InfinatiKickParams {
+impl Default for KickMeParams {
     fn default() -> Self {
         let d = KickParams::default();
         Self {
@@ -86,7 +86,7 @@ impl Default for InfinatiKickParams {
     }
 }
 
-impl InfinatiKickParams {
+impl KickMeParams {
     /// Snapshot the current (unsmoothed) values. Smoothing happens in the DSP
     /// voice so offline renders and the plugin sound the same.
     pub fn kick_params(&self) -> KickParams {

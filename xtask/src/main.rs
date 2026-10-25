@@ -5,8 +5,8 @@
 //! `--features vst3-gpl`, `.vst3`) bundles in `target/bundled/`.
 //!
 //! ```text
-//! cargo xtask bundle infinati_kick --release
-//! cargo xtask bundle infinati_kick --release --features vst3-gpl   # GPLv3 build!
+//! cargo xtask bundle kick_me --release
+//! cargo xtask bundle kick_me --release --features vst3-gpl   # GPLv3 build!
 //! ```
 
 fn main() -> nih_plug_xtask::Result<()> {

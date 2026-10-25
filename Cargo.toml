@@ -3,7 +3,7 @@ resolver = "2"
 members = [
     "crates/nusick-dsp",
     "crates/nusick-ui",
-    "plugins/infinati-kick",
+    "plugins/kick-me",
     "xtask",
 ]
 

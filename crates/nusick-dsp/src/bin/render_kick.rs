@@ -1,4 +1,4 @@
-//! Render one Infinati Kick hit to a WAV file for quick listening.
+//! Render one Kick Me hit to a WAV file for quick listening.
 //!
 //! ```text
 //! cargo run -p nusick-dsp --bin render-kick -- kick.wav --start 220 --end 45 --drive 0.4
