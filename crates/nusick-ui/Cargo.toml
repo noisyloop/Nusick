@@ -1,0 +1,11 @@
+[package]
+name = "nusick-ui"
+description = "Shared dark theme and egui widgets for Nusick plugins"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[dependencies]
+nih_plug.workspace = true
+nih_plug_egui.workspace = true
