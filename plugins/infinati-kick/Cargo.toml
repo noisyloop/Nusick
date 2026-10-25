@@ -1,0 +1,28 @@
+[package]
+name = "infinati_kick"
+description = "Infinati Kick: a sine kick synth with pitch sweep, click and drive"
+version.workspace = true
+edition.workspace = true
+license.workspace = true
+authors.workspace = true
+
+[lib]
+# cdylib for the CLAP/VST3 bundle, lib for the standalone binary.
+crate-type = ["cdylib", "lib"]
+
+[[bin]]
+name = "infinati_kick"
+path = "src/main.rs"
+
+[features]
+default = []
+# Opt-in VST3 export. WARNING: this links nih-plug's VST3 wrapper, which uses
+# the GPLv3 `vst3-sys` crate. A binary built with this feature has to be
+# distributed under GPLv3, not MIT. See README "Licensing and VST3".
+vst3-gpl = ["nih_plug/vst3"]
+
+[dependencies]
+nusick-dsp.workspace = true
+nusick-ui.workspace = true
+nih_plug = { workspace = true, features = ["assert_process_allocs", "standalone"] }
+nih_plug_egui.workspace = true

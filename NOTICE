@@ -1,0 +1,63 @@
+Nusick
+Copyright (c) 2026 noisyloop / Infinati
+Licensed under the MIT License (see LICENSE).
+
+This NOTICE lists the licenses of third-party code compiled into Nusick's
+default builds (CLAP plugin + standalone app). It is checked in CI with
+`cargo deny check licenses` (policy in deny.toml).
+
+=============================================================================
+DEFAULT BUILD: no GPL code
+=============================================================================
+
+Direct dependencies
+-------------------
+nih-plug, nih_plug_derive, nih_plug_egui, nih_plug_xtask   ISC
+  https://github.com/robbert-vdh/nih-plug  (pinned rev de421011)
+  Copyright (c) 2022-2024 Robbert van der Helm
+egui, epaint, emath, ecolor                                MIT OR Apache-2.0
+egui-baseview                                              MIT
+baseview                                                   MIT OR Apache-2.0
+clap-sys (CLAP API bindings)                               MIT OR Apache-2.0
+cpal (standalone audio I/O)                                Apache-2.0
+jack (standalone JACK backend)                             MIT
+midir (standalone MIDI input)                              MIT
+assert_no_alloc (debug-build allocation checker)           BSD-1-Clause
+
+Transitive dependencies (about 230 crates across Linux, Windows and macOS)
+---------------------------------------------------------------------------
+By license family:
+  MIT, Apache-2.0, or dual MIT/Apache-2.0 .......... the vast majority
+  ISC .............................................. libloading, nih_log
+  Zlib / 0BSD / Unlicense / BlueOak (always offered
+    as an alternative to MIT or Apache-2.0; Nusick
+    takes the MIT/Apache option) ................... bytemuck, glow,
+                                                       raw-window-handle,
+                                                       memchr, adler2, ...
+  BSD-2/3-Clause ................................... bindgen (macOS build
+                                                       tool only), zerocopy
+
+Exceptions outside MIT/Apache/ISC/BSD (all permissive, reviewed):
+  clipboard-win, error-code    BSL-1.0 (Boost Software License)
+                               Windows only, egui clipboard support.
+  epaint_default_fonts         (MIT OR Apache-2.0) AND OFL-1.1 AND
+                               Ubuntu Font Licence 1.0.
+                               egui's built-in fonts, embedded in the binary.
+  unicode-ident                (MIT OR Apache-2.0) AND Unicode-3.0
+                               Build-time only (proc-macros).
+
+Run `cargo deny list` for the full per-crate list.
+
+=============================================================================
+OPT-IN `vst3-gpl` FEATURE: GPLv3
+=============================================================================
+Building with `--features vst3-gpl` links nih-plug's VST3 wrapper, which uses
+vst3-sys (https://github.com/robbert-vdh/vst3-sys), licensed GPLv3.
+Binaries built this way must be distributed under GPLv3, with source.
+Nusick's own source code stays MIT. Official Nusick releases never enable
+this feature.
+
+Steinberg's VST3 SDK headers are themselves MIT-licensed as of 2025, but
+vst3-sys keeps its own GPLv3 license. A future Nusick VST3 wrapper built on
+the MIT/Apache `vst3` crate (https://github.com/coupler-rs/vst3-rs) will
+remove this restriction.
