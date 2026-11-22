@@ -7,10 +7,16 @@ pub struct DelayLine {
 }
 
 impl DelayLine {
-    /// Allocates room for `max_delay_samples`. Call this off the audio thread.
+    /// Largest capacity [`DelayLine::new`] will allocate (16M samples, 64 MB).
+    pub const MAX_SAMPLES: usize = 1 << 24;
+    /// Samples are clamped to this magnitude on the way in.
+    pub const MAX_SAMPLE_VALUE: f32 = 1.0e9;
+
+    /// Allocates room for `max_delay_samples` (capped at [`DelayLine::MAX_SAMPLES`]). Call this
+    /// off the audio thread.
     pub fn new(max_delay_samples: usize) -> Self {
         Self {
-            buffer: vec![0.0; max_delay_samples.max(1) + 1].into_boxed_slice(),
+            buffer: vec![0.0; max_delay_samples.clamp(1, Self::MAX_SAMPLES) + 1].into_boxed_slice(),
             write: 0,
         }
     }
@@ -28,7 +34,9 @@ impl DelayLine {
     /// capacity). Fractional delays are linearly interpolated.
     #[inline]
     pub fn process(&mut self, x: f32, delay: f32) -> f32 {
-        self.buffer[self.write] = x;
+        // Bounded as well as finite: interpolating between two huge samples would overflow.
+        self.buffer[self.write] =
+            crate::finite(x, -Self::MAX_SAMPLE_VALUE, Self::MAX_SAMPLE_VALUE, 0.0);
         let out = self.read(delay);
         self.write = (self.write + 1) % self.buffer.len();
         out
@@ -38,7 +46,7 @@ impl DelayLine {
     #[inline]
     pub fn read(&self, delay: f32) -> f32 {
         let len = self.buffer.len();
-        let delay = delay.clamp(0.0, self.max_delay() as f32);
+        let delay = crate::finite(delay, 0.0, self.max_delay() as f32, 0.0);
         let whole = delay.floor() as usize;
         let frac = delay - whole as f32;
         let i0 = (self.write + len - whole) % len;

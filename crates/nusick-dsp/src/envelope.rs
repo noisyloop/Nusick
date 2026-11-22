@@ -3,10 +3,17 @@
 /// Ratio a "decay time" refers to: the envelope falls by 60 dB (to 1/1000).
 const DECAY_RATIO: f32 = 1.0e-3;
 
+/// Longest envelope or smoothing time accepted, in ms (ten minutes).
+pub const MAX_TIME_MS: f32 = 600_000.0;
+
 /// Per-sample multiplier that decays by 60 dB over `time_ms`.
+///
+/// A time that isn't finite counts as 0 (the fastest decay) and a huge one is capped at
+/// [`MAX_TIME_MS`], so the result is always a finite multiplier in `[0, 1)`.
 #[inline]
 pub fn decay_coef(time_ms: f32, sample_rate: f32) -> f32 {
-    let samples = (time_ms * 0.001 * sample_rate).max(1.0);
+    let time_ms = crate::finite(time_ms, 0.0, MAX_TIME_MS, 0.0);
+    let samples = (time_ms * 0.001 * crate::sane_sample_rate(sample_rate)).max(1.0);
     DECAY_RATIO.powf(1.0 / samples)
 }
 
@@ -78,7 +85,8 @@ impl AdEnvelope {
     }
 
     pub fn set_times(&mut self, attack_ms: f32, decay_ms: f32, sample_rate: f32) {
-        let attack_samples = attack_ms * 0.001 * sample_rate;
+        let attack_ms = crate::finite(attack_ms, 0.0, MAX_TIME_MS, 0.0);
+        let attack_samples = attack_ms * 0.001 * crate::sane_sample_rate(sample_rate);
         self.attack_step = if attack_samples < 1.0 {
             1.0
         } else {

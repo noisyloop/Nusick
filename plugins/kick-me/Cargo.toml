@@ -5,6 +5,7 @@ version.workspace = true
 edition.workspace = true
 license.workspace = true
 authors.workspace = true
+publish = false
 
 [lib]
 # cdylib for the CLAP/VST3 bundle, lib for the standalone binary.
@@ -20,6 +21,9 @@ default = []
 # the GPLv3 `vst3-sys` crate. A binary built with this feature has to be
 # distributed under GPLv3, not MIT. See README "Licensing and VST3".
 vst3-gpl = ["nih_plug/vst3"]
+
+[lints]
+workspace = true
 
 [dependencies]
 nusick-dsp.workspace = true

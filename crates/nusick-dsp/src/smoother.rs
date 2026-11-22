@@ -10,6 +10,7 @@ pub struct Smoother {
 impl Smoother {
     /// `time_ms` is roughly how long it takes to cover 99.9% of a jump.
     pub fn new(initial: f32, time_ms: f32, sample_rate: f32) -> Self {
+        let initial = crate::finite(initial, f32::MIN, f32::MAX, 0.0);
         let mut s = Self {
             current: initial,
             target: initial,
@@ -24,12 +25,17 @@ impl Smoother {
         self.coef = crate::envelope::decay_coef(time_ms, sample_rate);
     }
 
+    /// Sets the value to glide towards. A target that isn't finite is ignored, so one bad
+    /// parameter can't leave the smoother stuck on NaN.
     pub fn set_target(&mut self, target: f32) {
-        self.target = target;
+        if target.is_finite() {
+            self.target = target;
+        }
     }
 
     /// Jump straight to `value` with no smoothing.
     pub fn reset(&mut self, value: f32) {
+        let value = crate::finite(value, f32::MIN, f32::MAX, 0.0);
         self.current = value;
         self.target = value;
     }
@@ -46,6 +52,9 @@ impl Smoother {
     #[inline]
     pub fn next(&mut self) -> f32 {
         self.current = self.target + (self.current - self.target) * self.coef;
+        if !self.current.is_finite() {
+            self.current = self.target;
+        }
         // Snap when close: f32 rounding can otherwise stall just short of the target.
         if (self.current - self.target).abs() <= 1.0e-5 * self.target.abs().max(1.0) {
             self.current = self.target;

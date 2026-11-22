@@ -13,7 +13,12 @@
 //! Drive is gain-normalized and the sum is clamped to ±1, so the output peak
 //! never goes above `level_db`.
 
-use crate::{db_to_gain, Drive, ExpDecay, NoiseBurst, OnePole, SineOsc, Smoother};
+use crate::{
+    db_to_gain, finite, sane_sample_rate, Drive, ExpDecay, NoiseBurst, OnePole, SineOsc, Smoother,
+};
+
+/// Longest offline render, in seconds.
+pub const MAX_RENDER_SECONDS: f64 = 60.0;
 
 /// Fixed voicing constants.
 const CLICK_DECAY_MS: f32 = 6.0;
@@ -37,6 +42,54 @@ pub struct KickParams {
     pub drive: f32,
     /// Output peak level in dBFS.
     pub level_db: f32,
+}
+
+impl KickParams {
+    /// Allowed ranges, `(min, max)`. These are the single source of truth: the plugin's
+    /// parameters use them too, so the DSP and the plugin can't drift apart. Anything outside is
+    /// clamped, and anything that isn't finite falls back to the default.
+    pub const START_HZ: (f32, f32) = (40.0, 1000.0);
+    pub const END_HZ: (f32, f32) = (20.0, 200.0);
+    pub const PITCH_DECAY_MS: (f32, f32) = (1.0, 500.0);
+    pub const AMP_DECAY_MS: (f32, f32) = (10.0, 2000.0);
+    pub const CLICK: (f32, f32) = (0.0, 1.0);
+    pub const DRIVE: (f32, f32) = (0.0, 1.0);
+    /// The ceiling is 0 dB so a bad level can never push the output above full scale.
+    pub const LEVEL_DB: (f32, f32) = (-36.0, 0.0);
+
+    /// A copy with every field clamped into its range (non-finite values become the default).
+    pub fn sanitized(&self) -> Self {
+        let d = Self::default();
+        Self {
+            start_hz: finite(
+                self.start_hz,
+                Self::START_HZ.0,
+                Self::START_HZ.1,
+                d.start_hz,
+            ),
+            end_hz: finite(self.end_hz, Self::END_HZ.0, Self::END_HZ.1, d.end_hz),
+            pitch_decay_ms: finite(
+                self.pitch_decay_ms,
+                Self::PITCH_DECAY_MS.0,
+                Self::PITCH_DECAY_MS.1,
+                d.pitch_decay_ms,
+            ),
+            amp_decay_ms: finite(
+                self.amp_decay_ms,
+                Self::AMP_DECAY_MS.0,
+                Self::AMP_DECAY_MS.1,
+                d.amp_decay_ms,
+            ),
+            click: finite(self.click, Self::CLICK.0, Self::CLICK.1, d.click),
+            drive: finite(self.drive, Self::DRIVE.0, Self::DRIVE.1, d.drive),
+            level_db: finite(
+                self.level_db,
+                Self::LEVEL_DB.0,
+                Self::LEVEL_DB.1,
+                d.level_db,
+            ),
+        }
+    }
 }
 
 impl Default for KickParams {
@@ -71,8 +124,11 @@ pub struct KickVoice {
 }
 
 impl KickVoice {
+    /// `sample_rate` outside [`crate::MIN_SAMPLE_RATE`]..=[`crate::MAX_SAMPLE_RATE`] (or NaN)
+    /// is replaced by [`crate::DEFAULT_SAMPLE_RATE`]; `params` are clamped.
     pub fn new(sample_rate: f32, params: &KickParams) -> Self {
-        let sr = sample_rate;
+        let sr = sane_sample_rate(sample_rate);
+        let params = &params.sanitized();
         let mut voice = Self {
             sample_rate: sr,
             osc: SineOsc::new(),
@@ -98,6 +154,7 @@ impl KickVoice {
     /// Pitch, click, drive and level glide over ~20 ms. Decay times change
     /// the envelope rate straight away, which can't cause a step.
     pub fn set_params(&mut self, p: &KickParams) {
+        let p = &p.sanitized();
         let sr = self.sample_rate;
         self.start_hz.set_target(p.start_hz);
         self.end_hz.set_target(p.end_hz);
@@ -157,7 +214,13 @@ impl KickVoice {
         let body = self.osc.next(freq, self.sample_rate) * self.amp_env.next();
         let click = self.click_filter.highpass(self.click.next()) * click_amount;
 
-        drive.process(body + click).clamp(-1.0, 1.0) * level
+        let out = drive.process(body + click).clamp(-1.0, 1.0) * level;
+        // Last line of defence: nothing but a finite sample ever leaves the voice.
+        if out.is_finite() {
+            out
+        } else {
+            0.0
+        }
     }
 
     /// Fill `out` with samples.
@@ -168,12 +231,14 @@ impl KickVoice {
     }
 }
 
-/// Offline helper: render one hit of `seconds` length. Allocates, so don't
-/// call it on the audio thread.
+/// Offline helper: render one hit of `seconds` length (clamped to
+/// [`MAX_RENDER_SECONDS`]). Allocates, so don't call it on the audio thread.
 pub fn render(params: &KickParams, sample_rate: f32, seconds: f32) -> Vec<f32> {
     let mut voice = KickVoice::new(sample_rate, params);
     voice.trigger();
-    let mut out = vec![0.0; (seconds * sample_rate).round() as usize];
+    let seconds = finite(seconds, 0.0, MAX_RENDER_SECONDS as f32, 0.0);
+    let frames = (f64::from(seconds) * f64::from(voice.sample_rate())).round() as usize;
+    let mut out = vec![0.0; frames];
     voice.render_into(&mut out);
     out
 }

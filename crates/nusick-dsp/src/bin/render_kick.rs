@@ -4,7 +4,7 @@
 //! cargo run -p nusick-dsp --bin render-kick -- kick.wav --start 220 --end 45 --drive 0.4
 //! ```
 
-use nusick_dsp::{kick, wav, KickParams};
+use nusick_dsp::{kick, wav, KickParams, MAX_SAMPLE_RATE, MIN_SAMPLE_RATE};
 use std::{env, fs::File, io::BufWriter, process::ExitCode};
 
 const USAGE: &str = "usage: render-kick <out.wav> [--start HZ] [--end HZ] [--pitch-decay MS] \
@@ -33,9 +33,12 @@ fn run() -> Result<(), String> {
     let mut rate = 48_000_u32;
     while let Some(flag) = args.next() {
         let value = args.next().ok_or_else(|| format!("{flag} needs a value"))?;
+        // `"nan"` and `"inf"` parse as f32, so check for them: they are never a valid setting.
         let v: f32 = value
             .parse()
-            .map_err(|_| format!("bad number for {flag}: {value}"))?;
+            .ok()
+            .filter(|v: &f32| v.is_finite())
+            .ok_or_else(|| format!("bad number for {flag}: {value}"))?;
         match flag.as_str() {
             "--start" => p.start_hz = v,
             "--end" => p.end_hz = v,
@@ -45,9 +48,28 @@ fn run() -> Result<(), String> {
             "--drive" => p.drive = v,
             "--level" => p.level_db = v,
             "--length" => length = v,
-            "--rate" => rate = v as u32,
+            "--rate" => rate = v as u32, // checked below
             _ => return Err(format!("unknown flag {flag}")),
         }
+    }
+
+    // Out-of-range settings are clamped (KickParams::sanitized), but say so instead of silently
+    // rendering something else. Rate and length are limited so a typo can't allocate gigabytes.
+    let clamped = p.sanitized();
+    if clamped != p {
+        eprintln!("note: values outside the allowed ranges were clamped");
+    }
+    let p = clamped;
+    if !(MIN_SAMPLE_RATE as u32..=MAX_SAMPLE_RATE as u32).contains(&rate) {
+        return Err(format!(
+            "--rate must be {MIN_SAMPLE_RATE}..={MAX_SAMPLE_RATE} Hz"
+        ));
+    }
+    if !(0.0..=kick::MAX_RENDER_SECONDS as f32).contains(&length) {
+        return Err(format!(
+            "--length must be 0..={} seconds",
+            kick::MAX_RENDER_SECONDS
+        ));
     }
 
     let samples = kick::render(&p, rate as f32, length);

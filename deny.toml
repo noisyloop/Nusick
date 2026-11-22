@@ -1,6 +1,7 @@
-# cargo-deny config: `cargo deny check licenses`.
-# Policy: shipped code must be MIT, Apache-2.0, ISC or BSD. Anything else is
+# cargo-deny config: `cargo deny check advisories bans licenses sources` (run in CI).
+# Licenses: shipped code must be MIT, Apache-2.0, ISC or BSD. Anything else is
 # listed below as an explicit, reviewed exception (see NOTICE).
+# Advisories, bans and sources: see docs/SECURITY_REVIEW.md, finding 7.
 
 [graph]
 all-features = false   # the GPL `vst3-gpl` feature is intentionally excluded
@@ -36,10 +37,24 @@ exceptions = [
 [licenses.private]
 ignore = true
 
+[advisories]
+version = 2
+# A yanked crate was withdrawn by its author, usually for a bug or a security problem.
+yanked = "deny"
+# Every ignore needs a reason and a way out. Review the list whenever nih-plug is bumped.
+ignore = [
+    { id = "RUSTSEC-2026-0274", reason = "rtrb 0.2.3 double free when an element's Drop panics inside ReadChunk::commit. nih-plug (the only user, standalone backend only) pins rtrb ^0.2.2 and never calls read_chunk/commit: it uses push/pop on f32 and NoteEvent, which have no Drop. Not reachable. Remove this when nih-plug moves to rtrb >= 0.3.5." },
+]
+
 [bans]
 multiple-versions = "allow"
+# `*` version requirements would let a build pick up anything. Path dependencies inside the
+# workspace are fine.
+wildcards = "deny"
+allow-wildcard-paths = true
 
 [sources]
+unknown-registry = "deny"
 unknown-git = "deny"
 allow-git = [
     "https://github.com/robbert-vdh/nih-plug",

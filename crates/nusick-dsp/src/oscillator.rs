@@ -23,8 +23,15 @@ impl SineOsc {
     #[inline]
     pub fn next(&mut self, freq_hz: f32, sample_rate: f32) -> f32 {
         let out = (self.phase * TAU).sin() as f32;
-        self.phase += freq_hz as f64 / sample_rate as f64;
-        self.phase -= self.phase.floor();
+        // A frequency or rate that isn't finite holds the phase instead of making it NaN for good.
+        let step = freq_hz as f64 / sample_rate as f64;
+        if step.is_finite() {
+            self.phase += step;
+            self.phase -= self.phase.floor();
+        }
+        if !self.phase.is_finite() {
+            self.phase = 0.0;
+        }
         out
     }
 }
