@@ -80,7 +80,8 @@ impl Plugin for KickMe {
     ) -> bool {
         // Allocation is allowed here; it runs off the audio thread.
         self.voice = KickVoice::new(config.sample_rate, &self.params.kick_params());
-        self.meter_decay = 0.25_f32.powf(1.0 / (config.sample_rate * METER_DECAY_MS / 1000.0));
+        let rate = nusick_dsp::sane_sample_rate(config.sample_rate);
+        self.meter_decay = 0.25_f32.powf(1.0 / (rate * METER_DECAY_MS / 1000.0));
         true
     }
 

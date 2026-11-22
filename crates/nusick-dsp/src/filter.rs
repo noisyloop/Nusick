@@ -16,7 +16,9 @@ impl OnePole {
     }
 
     pub fn set_cutoff(&mut self, cutoff_hz: f32, sample_rate: f32) {
-        let fc = cutoff_hz.clamp(1.0, sample_rate * 0.49);
+        // `f32::clamp` panics when min > max, which a tiny or NaN sample rate used to cause.
+        let sample_rate = crate::sane_sample_rate(sample_rate);
+        let fc = crate::finite(cutoff_hz, 1.0, sample_rate * 0.49, 1.0);
         self.a = 1.0 - (-TAU * fc / sample_rate).exp();
     }
 
@@ -26,7 +28,11 @@ impl OnePole {
 
     #[inline]
     pub fn lowpass(&mut self, x: f32) -> f32 {
+        let x = if x.is_finite() { x } else { 0.0 };
         self.state += self.a * (x - self.state);
+        if !self.state.is_finite() {
+            self.state = 0.0;
+        }
         self.state
     }
 

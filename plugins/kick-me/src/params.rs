@@ -7,7 +7,8 @@ use std::sync::Arc;
 
 #[derive(Params)]
 pub struct KickMeParams {
-    #[persist = "editor-state"]
+    /// Window state. Deliberately **not** `#[persist]`ed: a saved session could otherwise set
+    /// the editor to an absurd size (security review, finding 5). The layout is fixed anyway.
     pub editor_state: Arc<EguiState>,
 
     #[id = "start"]
@@ -26,7 +27,7 @@ pub struct KickMeParams {
     pub level: FloatParam,
 }
 
-fn hz(name: &str, default: f32, min: f32, max: f32) -> FloatParam {
+fn hz(name: &str, default: f32, (min, max): (f32, f32)) -> FloatParam {
     FloatParam::new(
         name,
         default,
@@ -40,7 +41,7 @@ fn hz(name: &str, default: f32, min: f32, max: f32) -> FloatParam {
     .with_value_to_string(formatters::v2s_f32_rounded(1))
 }
 
-fn ms(name: &str, default: f32, min: f32, max: f32) -> FloatParam {
+fn ms(name: &str, default: f32, (min, max): (f32, f32)) -> FloatParam {
     FloatParam::new(
         name,
         default,
@@ -55,10 +56,17 @@ fn ms(name: &str, default: f32, min: f32, max: f32) -> FloatParam {
 }
 
 fn percent(name: &str, default: f32) -> FloatParam {
-    FloatParam::new(name, default, FloatRange::Linear { min: 0.0, max: 1.0 })
-        .with_unit("%")
-        .with_value_to_string(formatters::v2s_f32_percentage(0))
-        .with_string_to_value(formatters::s2v_f32_percentage())
+    FloatParam::new(
+        name,
+        default,
+        FloatRange::Linear {
+            min: KickParams::CLICK.0,
+            max: KickParams::CLICK.1,
+        },
+    )
+    .with_unit("%")
+    .with_value_to_string(formatters::v2s_f32_percentage(0))
+    .with_string_to_value(formatters::s2v_f32_percentage())
 }
 
 impl Default for KickMeParams {
@@ -66,18 +74,18 @@ impl Default for KickMeParams {
         let d = KickParams::default();
         Self {
             editor_state: EguiState::from_size(560, 200),
-            start_pitch: hz("Start Pitch", d.start_hz, 40.0, 1000.0),
-            end_pitch: hz("End Pitch", d.end_hz, 20.0, 200.0),
-            pitch_decay: ms("Pitch Decay", d.pitch_decay_ms, 1.0, 500.0),
-            amp_decay: ms("Amp Decay", d.amp_decay_ms, 10.0, 2000.0),
+            start_pitch: hz("Start Pitch", d.start_hz, KickParams::START_HZ),
+            end_pitch: hz("End Pitch", d.end_hz, KickParams::END_HZ),
+            pitch_decay: ms("Pitch Decay", d.pitch_decay_ms, KickParams::PITCH_DECAY_MS),
+            amp_decay: ms("Amp Decay", d.amp_decay_ms, KickParams::AMP_DECAY_MS),
             click: percent("Click", d.click),
             drive: percent("Drive", d.drive),
             level: FloatParam::new(
                 "Level",
                 d.level_db,
                 FloatRange::Linear {
-                    min: -36.0,
-                    max: 0.0,
+                    min: KickParams::LEVEL_DB.0,
+                    max: KickParams::LEVEL_DB.1,
                 },
             )
             .with_step_size(0.1)

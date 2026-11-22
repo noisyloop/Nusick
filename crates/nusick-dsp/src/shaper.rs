@@ -22,7 +22,7 @@ impl Drive {
 
     /// `amount` runs from 0 (clean) to 1 (heavy).
     pub fn new(amount: f32) -> Self {
-        let gain = amount.clamp(0.0, 1.0) * Self::MAX_GAIN;
+        let gain = crate::finite(amount, 0.0, 1.0, 0.0) * Self::MAX_GAIN;
         let norm = if gain < 1.0e-3 {
             1.0
         } else {
@@ -33,6 +33,9 @@ impl Drive {
 
     #[inline]
     pub fn process(&self, x: f32) -> f32 {
+        if !x.is_finite() {
+            return 0.0;
+        }
         if self.gain < 1.0e-3 {
             x
         } else {

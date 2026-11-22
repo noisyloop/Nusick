@@ -113,11 +113,20 @@ never include it.
 Nusick has its own MIT VST3 wrapper (planned, built on the MIT/Apache `vst3`
 crate), use the `vst3-gpl` build for your own sessions in Live.
 
+## Security
+
+Nusick's DSP never panics, allocates without bound, or outputs NaN/inf, whatever it is
+given: parameters outside the ranges in the table above are clamped, and a bad sample
+rate falls back to 48 kHz. Dependencies are checked with `cargo deny` (advisories, bans,
+licenses, sources) and the code forbids `unsafe`. See
+[docs/SECURITY_REVIEW.md](docs/SECURITY_REVIEW.md) for the review and the policy shared with
+[AudioZero](https://github.com/noisyloop/AudioZero), which builds on `nusick-dsp`.
+
 ## Releases
 
 Every push to `main` builds and tests on macOS, Windows and Linux. CI then
 replaces the GitHub Release tagged **`latest`** with fresh zips: a universal
-macOS build, Windows x64 and Linux x64.
+macOS build, Windows x64 and Linux x64, plus `SHA256SUMS.txt` to check your download.
 
 ## License
 

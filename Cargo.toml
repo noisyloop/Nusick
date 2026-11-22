@@ -23,6 +23,15 @@ nih_plug = { git = "https://github.com/robbert-vdh/nih-plug.git", rev = "de42101
 nih_plug_egui = { git = "https://github.com/robbert-vdh/nih-plug.git", rev = "de421011f41a6d10fc8c7a6084e4f4dee0143683" }
 nih_plug_xtask = { git = "https://github.com/robbert-vdh/nih-plug.git", rev = "de421011f41a6d10fc8c7a6084e4f4dee0143683" }
 
+# Same policy as AudioZero's workspace: no unsafe code of our own, in any crate. (nih-plug's
+# export macros expand to `unsafe` FFI entry points, but lints don't fire inside external macros,
+# so the plugin crate can forbid it too. CI would catch it if that ever changed.)
+[workspace.lints.rust]
+unsafe_code = "forbid"
+
+[workspace.lints.clippy]
+all = { level = "warn", priority = -1 }
+
 [profile.release]
 lto = "thin"
 strip = "symbols"
